@@ -4,6 +4,7 @@ import { Button, Label } from "@react-navigation/elements";
 import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert} from "react-native";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from "@expo-google-fonts/inconsolata";
 import { Asset } from "expo-asset";
+import api from "../services/api";
   
 export default function Inscription() {
 
@@ -41,14 +42,14 @@ const [isReady, setIsReady] = useState(false);
 
   const handleRegister = async () => {
     try {
-      console.log({ email, password, confirmPassword });
-      const response = await fetch("http://10.0.2.2:3000/api/Src/user/inscription", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, confirmPassword }),
+      console.log(email, password, confirmPassword);
+      const { response } = await api.post("/user/inscription", {
+        email,
+        password,
+        confirmPassword,
       });
+
+      console.log(response);
 
       const data = await response.json();
 

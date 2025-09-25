@@ -19,9 +19,11 @@ require("./Services/passport")(app);
 
 app.use("/user", require("./Controllers/user"));
 
+
 app.get("/", (req, res) => {
   res.send("API - Last deploy: " + new Date().toISOString());
 });
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
