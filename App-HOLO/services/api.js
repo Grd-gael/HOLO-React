@@ -1,9 +1,10 @@
 import { Platform } from "react-native";
 import * as Application from "expo-application";
 import { getCalendars } from "expo-localization";
-  
-import {API_HOST} from "../config";
+
+import { API_HOST } from "../config";
 import useAuthStore from "../store/authStore";
+
 
 class APIHandler {
   async removeToken() {
@@ -30,32 +31,24 @@ class APIHandler {
 
   async post(endpoint, data, options = {}) {
     try {
-      console.log(`[API] POST ${API_HOST}${endpoint}`);
       const response = await fetch(`${API_HOST}${endpoint}`, {
         method: "POST",
         headers: {
-          ...this.getHeaders(),
-          ...options.headers,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
         },
         signal: options.signal,
         body: JSON.stringify(data),
-        credentials: "include",
       });
-      console.log('ok');
-      if (response.status === 401) {
-        await this.removeToken();
-        return { ok: false, status: 401, error: "Unauthorized" };
-      }
       const res = await response.json();
-      return { ...res, status: response.status };
+
+      return { ...res, status: response.status, ok: response.ok };
     } catch (error) {
-      if (error.message.includes("NetworkError")) {
-        await this.removeToken();
-        return { ok: false, status: 401, error: "Unauthorized" };
-      }
+      console.error("[API] POST error:", error);
       throw error;
     }
   }
+
   async get(endpoint, options = {}) {
     try {
       console.log(`[API] GET ${API_HOST}${endpoint}`);

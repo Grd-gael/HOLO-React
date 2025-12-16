@@ -10,8 +10,10 @@ const bodyParser = require("body-parser");
 require("./Services/mongo");
 
 
-app.use(morgan("tiny"));
-app.use(cors({ credentials: true, origin: "*" }));
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -25,6 +27,4 @@ app.get("/", (req, res) => {
 });
 
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+app.listen(3000, "0.0.0.0", () => console.log("Serveur lancé sur 0.0.0.0:3000"));

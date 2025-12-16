@@ -4,23 +4,27 @@ const MODELNAME = 'User';
 
 const Schema = new mongoose.Schema(
     {
-        email : {
+        email: {
             type: String,
             required: true,
-            trim : true,
-            unique : true,
+            trim: true,
+            unique: true,
         },
-        first_name : {
+        name: {
             type: String,
-            required: true,
-            trim : true,
-        },
-        last_name : {
-            type: String,
-            trim : true,
+            required: false,
+            trim: true,
         },
         password: String,
-        last_login_at : {
+        createdAt: {
+            type: Date,
+            default: Date.now,
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now,
+        },
+        last_login_at: {
             type: Date,
             default: Date.now,
         },

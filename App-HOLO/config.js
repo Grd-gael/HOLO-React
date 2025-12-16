@@ -1,3 +1,3 @@
-const API_HOST = "http://192.168.43.136:3000";
+const API_HOST = "https://hadal-eloy-nonwarrantably.ngrok-free.dev";
 
-export {API_HOST};
+export { API_HOST };
