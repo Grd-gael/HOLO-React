@@ -10,7 +10,7 @@ import api from "../../services/api";
   
 export default function Inscription() {
 
-  const [email, setEmail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPasswordBorderColor, setConfirmPasswordBorderColor] = useState("#001E6A");
@@ -58,11 +58,11 @@ const [isReady, setIsReady] = useState(false);
     }
     try { 
       const response  = await api.post("/user/inscription", {
-        email,
+        username,
         password
       });
       if (response.ok) {
-        login(response.data.email, response.data.password, new Date(response.data.last_login_at));
+        login(response.data.username, response.data.password, new Date(response.data.last_login_at), new Date(response.data.created_at), response.data.avatar);
         router.replace("/(app)/accueil");
       } else {
         Alert.alert("Erreur", response.message || "Problème lors de l'inscription");
@@ -81,8 +81,8 @@ const [isReady, setIsReady] = useState(false);
           <Link href='/' style={[styles.backText, { textDecorationLine: "underline" }]}> &lt; Retour</Link>
           <Text style={styles.title}>Inscription</Text>
 
-          <Label style={styles.label}>Email</Label>
-          <TextInput inputMode="email" placeholder="Email" style={styles.input} placeholderTextColor= "rgba(0, 30, 106, 0.5)" value={email} onChangeText={setEmail} />
+          <Label style={styles.label}>Nom d'utilisateur</Label>
+          <TextInput inputMode="email"placeholder="Nom d'utilisateur" style={styles.input} placeholderTextColor= "rgba(0, 30, 106, 0.5)" value={username} onChangeText={setusername} />
 
           <Label style={styles.label} >Mot de passe</Label>
           <TextInput placeholder="Mot de passe" style={styles.input} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={true} value={password} onChangeText={setPassword} />

@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const AuthContext = createContext({
   isLoggedIn: false,
   setIsLoggedIn: (value: boolean) => {},
-  login: (email: string, token: string, lastLogin: Date) => {},
+  login: (username: string, token: string, lastLogin: Date, createdAt: Date, avatar: string) => {},
   logout: () => {}
 });
 
@@ -18,16 +18,18 @@ export const AuthProvider =({ children }: { children: React.ReactNode }) => {
         })
     }, [])
 
-    const login = async (email : string, token : string, lastLogin : Date) => {
-        await AsyncStorage.setItem('email', email);
+    const login = async (username : string, token : string, lastLogin : Date, createdAt : Date, avatar : string) => {
+        await AsyncStorage.setItem('username', username);
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('lastLogin', lastLogin.toISOString());
+        await AsyncStorage.setItem('createdAt', createdAt.toISOString()); 
+        await AsyncStorage.setItem('avatar', avatar ?? "normal");
         setIsLoggedIn(true);
     }
 
     const logout = async () => {
         await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('email');
+        await AsyncStorage.removeItem('username');
         await AsyncStorage.removeItem('lastLogin');
         setIsLoggedIn(false);
     }

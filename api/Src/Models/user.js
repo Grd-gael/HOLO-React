@@ -4,16 +4,15 @@ const MODELNAME = 'User';
 
 const Schema = new mongoose.Schema(
     {
-        email: {
+        username: {
             type: String,
             required: true,
             trim: true,
             unique: true,
         },
-        name: {
+        avatar: {
             type: String,
-            required: false,
-            trim: true,
+            default: "normal",
         },
         password: String,
         createdAt: {

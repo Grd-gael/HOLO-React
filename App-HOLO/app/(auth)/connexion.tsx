@@ -15,10 +15,10 @@ export default function Connexion() {
   });
 
   const [isReady, setIsReady] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordBorderColor, setPasswordBorderColor] = useState("#001E6A");
-  const [emailBorderColor, setEmailBorderColor] = useState("#001E6A");
+  const [usernameBorderColor, setusernameBorderColor] = useState("#001E6A");
   const { login } = useAuth();
   
 
@@ -46,15 +46,15 @@ export default function Connexion() {
     const handleConnexion = async () => {
       try {
         const response = await api.post("/user/connexion", {
-          email,
+          username,
           password,
         });
 
         if (response.code == "INVALID_USER"){
-          Alert.alert("Erreur", "Adresse email invalide");
-          setEmailBorderColor("red");
+          Alert.alert("Erreur", "Adresse username invalide");
+          setusernameBorderColor("red");
         } else {
-          setEmailBorderColor("#001E6A");
+          setusernameBorderColor("#001E6A");
         }
         if (response.code == "PASSWORD_INVALID"){
           Alert.alert("Erreur", "Mot de passe invalide");
@@ -64,7 +64,7 @@ export default function Connexion() {
         }
 
         if (response.ok){
-          login(response.data.email, response.data.password, new Date(response.data.last_login_at));
+          login(response.data.username, response.data.password, new Date(response.data.last_login_at), new Date(response.data.createdAt), response.data.avatar);
           router.replace("/(app)/accueil");
         }
       } catch (error) {
@@ -81,8 +81,8 @@ export default function Connexion() {
       <View style={{paddingLeft: 90, paddingRight: 90, paddingBottom: 150, position: "relative", top: -40}}>
         <Link href="/" style={[styles.backText, { textDecorationLine: "underline" }]}> &lt; Retour</Link>
         <Text style={styles.title}>Connexion</Text>
-        <Label style={styles.label}>Email</Label>
-        <TextInput inputMode="email" placeholder="Email" onChangeText={setEmail} style={[styles.input, { borderColor: emailBorderColor, boxShadow : "0 0 3px " + emailBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)"/>
+        <Label style={styles.label}>Nom d'utilisateur</Label>
+        <TextInput inputMode="email" placeholder="Nom d'utilisateur" onChangeText={setusername} style={[styles.input, { borderColor: usernameBorderColor, boxShadow : "0 0 3px " + usernameBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)"/>
         <Label style={styles.label} >Mot de passe</Label>
         <TextInput placeholder="Mot de passe" style={[styles.input, { borderColor: passwordBorderColor, boxShadow : "0 0 3px " + passwordBorderColor }]} onChangeText={setPassword} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={true} />
         <Button style={styles.button} color="#ffffff" onPress={handleConnexion}>Valider</Button>
