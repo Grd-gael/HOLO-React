@@ -1,4 +1,4 @@
-import { Text, View, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Pressable, Modal, Alert } from "react-native";
+import { Text, View, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Pressable, Modal, TextInput, Alert } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from '@expo-google-fonts/inconsolata';
 import { use, useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { useAuth } from "@/context/authContext";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Asset } from "expo-asset";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import api from "@/services/api";
 
 
 export default function Profil() {
@@ -15,12 +16,14 @@ export default function Profil() {
         Inconsolata_700Bold,
     });
 
-    const [username, setusername] = useState<string | null>(null);
+    const [username, setusername] = useState<string | null>("");
+    const [newUsername, setNewUsername] = useState<string>("");
+    const [usernameModalVisible, setUsernameModalVisible] = useState(false);
     const [lastLogin, setLastLogin] = useState<Date | null>(null);
     const [createdAt, setCreatedAt] = useState<Date | null>(null);
     const [avatar, setAvatar] = useState<string>("normal.png");
     const [isReady, setIsReady] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
+    const [avatarModalVisible, setAvatarModalVisible] = useState(false);
     const { logout } = useAuth();
     
     const avatars: Record<string, any> = {
@@ -36,11 +39,77 @@ export default function Profil() {
         router.replace('../(auth)/');
     }
 
+    const handleDeleteAccount = async () => {
+        Alert.alert(
+            "Confirmer la suppression",
+            "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible.",
+            [
+                {
+                    text: "Annuler",
+                    style: "cancel"
+                },
+                {
+                    text: "Supprimer",
+                    style: "destructive",
+                    onPress: async () => {
+                        const userID = await AsyncStorage.getItem("userId");
+                        const response = await api.delete(`/user/${userID}`);
+                        if (response.ok){
+                            logout();
+                            router.replace('../(auth)/');
+                            Alert.alert("Compte supprimé", "Ton compte a été supprimé avec succès.");
+                        }
+                        else {
+                            Alert.alert("Erreur", response.message || "Problème lors de la suppression du compte");
+                        }
+                    }
+                }
+            ]
+        );
+    }
+
+    const editAvatar = async (newAvatar : string) => {
+        const userID = await AsyncStorage.getItem("userId");
+        const response = await api.put(`/user/${userID}/avatar`, {
+          avatar: newAvatar,
+        });
+        if (response.ok){
+            setAvatar(newAvatar);
+            await AsyncStorage.setItem('avatar', newAvatar);
+        }
+        else {
+            Alert.alert("Erreur", response.message || "Problème lors de l'inscription");
+        }
+    }
+
+    const editUsername = async (newUsername : string) => {
+        const userID = await AsyncStorage.getItem("userId");
+
+        if (newUsername.trim() === "") {
+            Alert.alert("Erreur", "Le nom d'utilisateur ne peut pas être vide.");
+            return;
+        }
+
+        const response = await api.put(`/user/${userID}/username`, {
+          username: newUsername,
+        });
+        if (response.ok){
+            setusername(newUsername);
+            await AsyncStorage.setItem('username', newUsername);
+            setUsernameModalVisible(false);
+        }
+        else {
+            Alert.alert("Erreur", "Ce nom d'utilisateur est déjà pris.");
+        }
+    }
+
 
 
      useEffect(() => {
       const loadUser = async () => {
+        const userID = await AsyncStorage.getItem("userId");
         const username = await AsyncStorage.getItem("username");
+        setNewUsername(username ?? "");
         const lastLoginString = await AsyncStorage.getItem("lastLogin");
         const createdAtString = await AsyncStorage.getItem("createdAt");
         const avatar = await AsyncStorage.getItem("avatar");
@@ -86,9 +155,9 @@ export default function Profil() {
         <Modal
           animationType="slide"
           transparent={true}
-          visible={modalVisible}
+          visible={avatarModalVisible}
           onRequestClose={() => {
-            setModalVisible(!modalVisible);
+            setAvatarModalVisible(!avatarModalVisible);
           }}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
@@ -128,22 +197,88 @@ export default function Profil() {
                     borderRadius: 10,
                     width: 340,
                     }}
-                    onPress={() => setModalVisible(!modalVisible)}>
+                    onPress={() => 
+                    [setAvatarModalVisible(!avatarModalVisible), editAvatar(avatar)]
+                    }>
                     <Text style={{ color: "#FFFFFF", fontSize: 16, fontFamily: "Inconsolata_700Bold" }}>Enregistrer</Text>
                 </TouchableOpacity>
             </View>
           </View>
         </Modal>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={usernameModalVisible}
+          onRequestClose={() => {
+            setUsernameModalVisible(!usernameModalVisible);
+          }}>
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+                <Text style={styles.paragraphe}>Choisis ton nom d'utilisateur :</Text>
+                <View style={ {marginTop: -30 }}>
+                    <TextInput
+                    placeholder="Nouveau nom d'utilisateur"
+                    value={newUsername}
+                    placeholderTextColor= "rgba(0, 30, 106, 0.5)"
+                    style={{
+                        height: 40,
+                        width: 240,
+                        marginBottom: 12,
+                        marginTop: 5,
+                        borderWidth: 1,
+                        padding: 10,
+                        borderRadius: 5,
+                        borderColor: "#001E6A",
+                        fontFamily: "Inconsolata_400Regular",
+                    }}
+                    onChangeText={setNewUsername}
+                    />
+                </View>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                    <TouchableOpacity
+                    style={{
+                    backgroundColor: "#ee0000",
+                    paddingVertical: 15,
+                    paddingHorizontal: 50,
+                    borderRadius: 10,
+                    }}
+                    onPress={() => 
+                    [setUsernameModalVisible(!usernameModalVisible)]
+                    }>
+                    <Text style={{ color: "#FFFFFF", fontSize: 16, fontFamily: "Inconsolata_700Bold" }}>Annuler</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                    style={{
+                    backgroundColor: "#001E6A",
+                    paddingVertical: 15,
+                    paddingHorizontal: 50,
+                    borderRadius: 10,
+                    }}
+                    onPress={() => 
+                    [editUsername(newUsername)]
+                    }>
+                    <Text style={{ color: "#FFFFFF", fontSize: 16, fontFamily: "Inconsolata_700Bold" }}>Enregistrer</Text>
+                </TouchableOpacity>
+                </View>
+            </View>
+          </View>
+        </Modal>
         <Image source={require('@/app/img/logo-Holo.png')} style={styles.image}/>
+        <TouchableOpacity style={{ position: "absolute", top: 50, right: 30 }} onPress ={handleDeleteAccount}>
+            <FontAwesome5 name="trash-alt" size={30} color="#ee0000" />
+        </TouchableOpacity>
         <View style={styles.view}>
-            <TouchableOpacity onPress ={() => setModalVisible(true)}>
+            <TouchableOpacity onPress ={() => setAvatarModalVisible(true)}>
                 <Image source={avatars[avatar]} style={styles.photoProfil}/>
-                <FontAwesome5 name="pen" size={24} color="#001E6A" style={{ position: "absolute", top: 110, right: 100, backgroundColor: "#ffffff", borderRadius: 25, padding: 10, borderWidth: 1, borderColor: "#001E6A"     }} />
+                <FontAwesome5 name="pen" size={24} color="#001E6A" style={{ position: "absolute", top: 110, right: 0, backgroundColor: "#ffffff", borderRadius: 25, padding: 10, borderWidth: 1, borderColor: "#001E6A"     }} />
             </TouchableOpacity>
 
-            <Text style={[styles.title, { color: "#001E6A" }]}>{username}</Text>
+            <Text style={[styles.title, { color: "#001E6A" }]}>{username} 
+                <TouchableOpacity  onPress ={() => setUsernameModalVisible(true)}>
+                    <FontAwesome5 name="pen" size={18} color="#001E6A" style={{ marginLeft: 10 }}/>
+                </TouchableOpacity>
+            </Text>
             <Text style={[styles.paragraphe, { color: "#001E6A" }]}>Membre depuis le {createdAt ? createdAt.toLocaleDateString("fr-FR") : "N/A"}</Text>
-            <Text style={[styles.paragraphe, { color: "#001E6A", marginTop: 10 }]}>Gère tes informations personnelles et tes préférences ici.</Text>
             <TouchableOpacity style={styles.logoutButton} onPress = {handleLogout}>
                 <FontAwesome name="sign-out" size={20} color="#ee0000" />
                 <Text style={{ color: "#ee0000" }}>Se déconnecter</Text>
@@ -195,6 +330,7 @@ const styles = StyleSheet.create({
     height: 50,
     fontFamily: "Inconsolata_400Regular",
   },
+
     logoutButton: { 
         borderColor: "#ee0000",
         display: "flex",

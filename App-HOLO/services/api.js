@@ -44,14 +44,37 @@ class APIHandler {
 
       return { ...res, status: response.status, ok: response.ok };
     } catch (error) {
-      console.error("[API] POST error:", error);
+      throw error;
+    }
+  }
+
+  async put(endpoint, data, options = {}) {
+    try {
+      const response = await fetch(`${API_HOST}${endpoint}`, {
+        method: "PUT",
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (response.status === 401) {
+        await this.removeToken();
+        return { ok: false, status: 401, error: "Unauthorized" };
+      }
+      const res = await response.json();
+      return { ...res, status: response.status, ok: response.ok };
+    } catch (error) {
+      if (error.message.includes("NetworkError")) {
+        await this.removeToken();
+        return { ok: false, status: 401, error: "Unauthorized" };
+      }
       throw error;
     }
   }
 
   async get(endpoint, options = {}) {
     try {
-      console.log(`[API] GET ${API_HOST}${endpoint}`);
       const response = await fetch(`${API_HOST}${endpoint}`, {
         method: "GET",
         headers: {
@@ -65,7 +88,33 @@ class APIHandler {
         return { ok: false, status: 401, error: "Unauthorized" };
       }
       const res = await response.json();
-      return { ...res, status: response.status };
+      return { ...res, status: response.status, ok: response.ok };
+    } catch (error) {
+      if (error.message.includes("NetworkError")) {
+        await this.removeToken();
+        return { ok: false, status: 401, error: "Unauthorized" };
+      }
+      throw error;
+    }
+  }
+
+
+
+  async delete(endpoint, options = {}) {
+    try {
+      const response = await fetch(`${API_HOST}${endpoint}`, {
+        method: "DELETE",
+        headers: {
+          ...this.getHeaders(),
+          ...options.headers,
+        },
+      });
+      if (response.status === 401) {
+        await this.removeToken();
+        return { ok: false, status: 401, error: "Unauthorized" };
+      }
+      const res = await response.json();
+      return { ...res, status: response.status, ok: response.ok };
     } catch (error) {
       if (error.message.includes("NetworkError")) {
         await this.removeToken();

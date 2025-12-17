@@ -62,7 +62,8 @@ const [isReady, setIsReady] = useState(false);
         password
       });
       if (response.ok) {
-        login(response.data.username, response.data.password, new Date(response.data.last_login_at), new Date(response.data.created_at), response.data.avatar);
+        console.log(response.data);
+        await login(response.data._id, response.data.username, response.data.last_login_at, response.data.createdAt, response.data.avatar);
         router.replace("/(app)/accueil");
       } else {
         Alert.alert("Erreur", response.message || "Problème lors de l'inscription");

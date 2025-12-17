@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const AuthContext = createContext({
   isLoggedIn: false,
   setIsLoggedIn: (value: boolean) => {},
-  login: (username: string, token: string, lastLogin: Date, createdAt: Date, avatar: string) => {},
+  login: (userId: string, username: string, lastLogin: string, createdAt: string, avatar: string) => {},
   logout: () => {}
 });
 
@@ -18,11 +18,16 @@ export const AuthProvider =({ children }: { children: React.ReactNode }) => {
         })
     }, [])
 
-    const login = async (username : string, token : string, lastLogin : Date, createdAt : Date, avatar : string) => {
+    const login = async (userId : string, username : string, lastLogin : string, createdAt : string, avatar : string) => {
+        await AsyncStorage.setItem('userId', userId);
         await AsyncStorage.setItem('username', username);
-        await AsyncStorage.setItem('token', token);
-        await AsyncStorage.setItem('lastLogin', lastLogin.toISOString());
-        await AsyncStorage.setItem('createdAt', createdAt.toISOString()); 
+        if (lastLogin && typeof lastLogin === 'string') {
+            await AsyncStorage.setItem('lastLogin', lastLogin);
+        }
+
+        if (createdAt && typeof createdAt === 'string') {
+            await AsyncStorage.setItem('createdAt', createdAt);
+        }
         await AsyncStorage.setItem('avatar', avatar ?? "normal");
         setIsLoggedIn(true);
     }
@@ -31,6 +36,9 @@ export const AuthProvider =({ children }: { children: React.ReactNode }) => {
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('username');
         await AsyncStorage.removeItem('lastLogin');
+        await AsyncStorage.removeItem('createdAt');
+        await AsyncStorage.removeItem('avatar');
+        await AsyncStorage.removeItem('userId');
         setIsLoggedIn(false);
     }
 

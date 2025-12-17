@@ -15,14 +15,6 @@ const Schema = new mongoose.Schema(
             default: "normal",
         },
         password: String,
-        createdAt: {
-            type: Date,
-            default: Date.now,
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now,
-        },
         last_login_at: {
             type: Date,
             default: Date.now,

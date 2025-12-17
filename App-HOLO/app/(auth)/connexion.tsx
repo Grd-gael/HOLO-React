@@ -64,7 +64,7 @@ export default function Connexion() {
         }
 
         if (response.ok){
-          login(response.data.username, response.data.password, new Date(response.data.last_login_at), new Date(response.data.createdAt), response.data.avatar);
+          await login(response.data._id, response.data.username, response.data.last_login_at, response.data.createdAt, response.data.avatar);
           router.replace("/(app)/accueil");
         }
       } catch (error) {

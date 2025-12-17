@@ -1,11 +1,13 @@
 import { Button, Label } from "@react-navigation/elements";
-import { Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Text, TextInput, View, StyleSheet, Image, TouchableOpacity, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, ScrollView} from "react-native";
+import { Link, useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Text, TextInput, View, StyleSheet, Image, TouchableOpacity, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert} from "react-native";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from "@expo-google-fonts/inconsolata";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { Asset } from "expo-asset";
+import api from "@/services/api";
 
 
 export default function Accueil() {
@@ -14,15 +16,54 @@ export default function Accueil() {
     Inconsolata_700Bold,
   });
 
-  const [username, setusername] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [lastLogin, setLastLogin] = useState<Date | null>(null);
   const [pressed, setPressed] = useState<number | null>(null);
+  const [humor, setHumor] = useState<string | null>(null);
+  const [comment, setComment] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+
+  const saveMood = (humor: string | null, comment: string | null) => async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      const date = new Date();
+      const response = await api.post("/mood/add", {
+        id_user: userId,
+        date,
+        humor,
+        comment,
+      });
+
+      if (response.ok) {
+        Alert.alert("Succès", "Ton humeur a été enregistrée !");
+        setPressed(null);
+        setHumor(null);
+        setComment(null);
+      } else {
+        Alert.alert("Erreur", response.message || "Problème lors de l'enregistrement de ton humeur");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement de l'humeur :", error);
+      Alert.alert("Erreur", "Une erreur est survenue lors de l'enregistrement de ton humeur");
+    }
+  };
 
 
   const handlePress = (box : number) => {
     if (pressed === box) {
       setPressed(null);
+      setHumor(null);
       return;
+    }
+    if (box === 1) {
+      setHumor("happy");
+    } else if (box === 2) {
+      setHumor("sad");
+    } else if (box === 3) {
+      setHumor("anxious");
+    } else if (box === 4) {
+      setHumor("angry");
     }
     setPressed(box);
   };
@@ -37,19 +78,49 @@ export default function Accueil() {
 
   useEffect(() => {
   const loadUser = async () => {
-    const username = await AsyncStorage.getItem("username");
-    const lastLoginString = await AsyncStorage.getItem("lastLogin");
-    setLastLogin(lastLoginString ? new Date(lastLoginString) : null);
-    setusername(username);
+    try {
+      const savedUsername = await AsyncStorage.getItem("username");
+      const lastLoginString = await AsyncStorage.getItem("lastLogin");
+
+      setUsername(savedUsername);
+      setLastLogin(lastLoginString ? new Date(lastLoginString) : null);
+    } catch (e) {
+      console.error("Erreur chargement utilisateur", e);
+    } finally {
+      
+      setIsReady(true); 
+    }
   };
 
   loadUser();
 }, []);
 
+    useFocusEffect(
+  useCallback(() => {
+    const loadUser = async () => {
+      const username = await AsyncStorage.getItem("username");
+      setUsername(username);
+    };
+
+    loadUser();
+  }, [])
+);
+  
+    if (!isReady) {
+      return (
+        <View style={styles.view}>
+          <ActivityIndicator size="large" color="#001E6A" />
+        </View>
+      );
+    }
+
   const router = useRouter();
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <KeyboardAwareScrollView style={{ flex: 1, backgroundColor: "#FFFFFF" }} >
+    <KeyboardAwareScrollView 
+     style={{ flex: 1, backgroundColor: "#FFFFFF" }}
+    enableOnAndroid={true}
+    extraScrollHeight={20} >
     <View>
       <Image source={require('../img/logo-Holo.png')} style={styles.image}/>  
       <TouchableOpacity style={{ position: "absolute", top: 50, right: 30, padding: 10, borderRadius: 10 }} onPress = {() => router.push('/profil')}>
@@ -58,7 +129,7 @@ export default function Accueil() {
 
       <View style={styles.view} >
         <View style={styles.box}>
-          <Text style={styles.title}>👋 Bienvenue {username},</Text>
+          <Text style={styles.title}>👋 Bonjour {username},</Text>
           <Text style={[styles.paragraphe, { color: "#FFFFFF" }]}>Note ton humeur et sens toi libre de t’exprimer tous les jours pour voir ton évolution tout au long de l’année !</Text>
         </View> 
         <View style={{ display: "flex", justifyContent : "flex-start", alignItems: "center"}}>
@@ -69,17 +140,17 @@ export default function Accueil() {
               <FontAwesome5 name="grin-beam" size={60} style={[styles.choiceBoxImage, pressed === 1 && { color: "#FF6700" }]}/>
               <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 1 ? "#FF6700" : "#001E6A" }}>Heureux</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.choiceBox, pressed === 2 && { borderColor: "#FF6700" }]} onPress={() => handlePress(2)}>
-              <FontAwesome5 name="frown" size={60} style={[styles.choiceBoxImage, pressed === 2 && { color: "#FF6700" }]}/>
-              <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 2 ? "#FF6700" : "#001E6A" }}>Triste</Text>
+            <TouchableOpacity style={[styles.choiceBox, pressed === 2 && { borderColor: "#9e44edff" }]} onPress={() => handlePress(2)}>
+              <FontAwesome5 name="frown" size={60} style={[styles.choiceBoxImage, pressed === 2 && { color: "#9e44edff" }]}/>
+              <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 2 ? "#9e44edff" : "#001E6A" }}>Triste</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.choiceBox, pressed === 3 && { borderColor: "#FF6700" }]} onPress={() => handlePress(3)}>
-              <FontAwesome5 name="grimace" size={60} style={[styles.choiceBoxImage, pressed === 3 && { color: "#FF6700" }]}/>
-              <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 3 ? "#FF6700" : "#001E6A" }}>Anxieux</Text>
+            <TouchableOpacity style={[styles.choiceBox, pressed === 3 && { borderColor: "#1aa810ff" }]} onPress={() => handlePress(3)}>
+              <FontAwesome5 name="grimace" size={60} style={[styles.choiceBoxImage, pressed === 3 && { color: "#1aa810ff" }]}/>
+              <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 3 ? "#1aa810ff" : "#001E6A" }}>Anxieux</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.choiceBox, pressed === 4 && { borderColor: "#FF6700" }]} onPress={() => handlePress(4)}>
-              <FontAwesome5 name="angry" size={60} style={[styles.choiceBoxImage, pressed === 4 && { color: "#FF6700" }]}/>
-              <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 4 ? "#FF6700" : "#001E6A" }}>En colère</Text>
+            <TouchableOpacity style={[styles.choiceBox, pressed === 4 && { borderColor: "#ed1717ff" }]} onPress={() => handlePress(4)}>
+              <FontAwesome5 name="angry" size={60} style={[styles.choiceBoxImage, pressed === 4 && { color: "#ed1717ff" }]}/>
+              <Text style={{ textAlign: "center", fontFamily: "Inconsolata_400Regular", color: pressed === 4 ? "#ed1717ff" : "#001E6A" }}>En colère</Text>
             </TouchableOpacity>
           </View>  
           <Text style={[styles.paragraphe, { color: "#001E6A", alignSelf: "flex-start",  marginTop: 30 }]}>Ajouter un commentaire ?</Text> 
@@ -99,8 +170,9 @@ export default function Accueil() {
                 textAlignVertical: "top",
               }}
               multiline
-              inputMode="email"
               numberOfLines={4}
+              value={comment??""}
+              onChangeText={setComment}
             /> 
           <TouchableOpacity
             style={{
@@ -110,6 +182,7 @@ export default function Accueil() {
               borderRadius: 10,
               width: 340,
             }}
+            onPress={saveMood(humor, comment)}
           >
             <Text style={{ color: "#FFFFFF", fontSize: 16, fontFamily: "Inconsolata_700Bold" }}>Enregistrer</Text>
           </TouchableOpacity>

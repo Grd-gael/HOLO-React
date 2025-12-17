@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 require("./Services/passport")(app);
 
 app.use("/user", require("./Controllers/user"));
+app.use("/mood", require("./Controllers/mood"));
 
 
 app.get("/", (req, res) => {
