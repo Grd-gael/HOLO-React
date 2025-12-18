@@ -1,7 +1,7 @@
 import { Link, useRouter} from "expo-router";
 import { useState, useEffect } from "react";
 import { Button, Label } from "@react-navigation/elements";
-import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert, TouchableOpacity} from "react-native";
+import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert, TouchableOpacity, TouchableWithoutFeedback, Keyboard} from "react-native";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from "@expo-google-fonts/inconsolata";
 import { Asset } from "expo-asset";
 import api from "@/services/api";
@@ -80,6 +80,8 @@ export default function Connexion() {
 
   const router = useRouter();
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    
     <View style={styles.view} className="main-container">
       <Image source={require('../img/deco-top.png')} style={[styles.image, { position: "absolute", top: 0, left: 0, resizeMode: "contain", height: 382, width: 390, }]} />
       <Image source={require('../img/logo-Holo.png')} style={styles.image} />
@@ -101,6 +103,7 @@ export default function Connexion() {
       </View>
       <Image source={require('../img/deco-bottom.png')} style={[styles.image, { position: "absolute", bottom: 0, right: 0, resizeMode: "contain", height: 365, width: 390, }]} />
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 

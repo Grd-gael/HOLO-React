@@ -18,9 +18,11 @@ export default function Accueil() {
   const [username, setUsername] = useState<string | null>(null);
   const [lastLogin, setLastLogin] = useState<Date | null>(null);
   const [pressed, setPressed] = useState<number | null>(null);
+  const [moodId, setMoodId] = useState<string | null>(null);
   const [humor, setHumor] = useState<string | null>(null);
   const [comment, setComment] = useState<string | null>(null);
   const [dayDone, setDayDone] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
 
@@ -28,6 +30,31 @@ export default function Accueil() {
     try {
       const userId = await AsyncStorage.getItem("userId");
       const date = new Date();
+      if (dayDone) {
+        if (!moodId) {
+          Alert.alert("Erreur", "Aucun ID d'humeur trouvé pour la mise à jour");
+          return;
+        }
+        const response = await api.put("/mood/update/" + moodId, {
+          humor,
+          comment,
+        });
+
+        if (response.ok) {
+          setPressed(response.data.humor === "happy" ? 1 :
+          response.data.humor === "sad" ? 2 :
+          response.data.humor === "anxious" ? 3 :
+          response.data.humor === "angry" ? 4 : null);
+          setHumor(response.data.humor);
+          setComment(response.data.comment);
+          setModalVisible(false);
+          Alert.alert("Succès", "Ton humeur a été mise à jour !");
+          router.push("/recap");
+        } else {
+          Alert.alert("Erreur", response.message || "Problème lors de la mise à jour de ton humeur");
+        }
+        return;
+      }
       const response = await api.post("/mood/add", {
         id_user: userId,
         date,
@@ -36,10 +63,11 @@ export default function Accueil() {
       });
 
       if (response.ok) {
-        Alert.alert("Succès", "Ton humeur a été enregistrée !");
         setPressed(null);
         setHumor(null);
         setComment(null);
+        setModalVisible(false);
+        router.push("/recap");
         setDayDone(true);
       } else {
         Alert.alert("Erreur", response.message || "Problème lors de l'enregistrement de ton humeur");
@@ -76,6 +104,25 @@ export default function Accueil() {
 
     return date.charAt(0).toUpperCase() + date.slice(1);
   }
+  const checkMoodForToday = async () => {
+    const moodToday = await api.get("/mood/today/" + await AsyncStorage.getItem("userId"));
+      if (moodToday.ok && moodToday.data) {
+        setDayDone(true);
+        setModalVisible(true);
+        setMoodId(moodToday.data._id);
+        setHumor(moodToday.data.humor);
+        setPressed(
+          moodToday.data.humor === "happy" ? 1 :
+          moodToday.data.humor === "sad" ? 2 :
+          moodToday.data.humor === "anxious" ? 3 :
+          moodToday.data.humor === "angry" ? 4 : null
+        );
+        console.log(moodToday.data);
+        setComment(moodToday.data.comment);
+      } else {
+        setDayDone(false);
+      }
+    };
 
   useEffect(() => {
   const loadUser = async () => {
@@ -92,16 +139,6 @@ export default function Accueil() {
     }
   };
 
-  const checkMoodForToday = async () => {
-    const moodToday = await api.get("/mood/today/" + await AsyncStorage.getItem("userId"));
-      if (moodToday.ok && moodToday.data) {
-        setDayDone(true);
-        setHumor(moodToday.data.humor);
-        setComment(moodToday.data.comment);
-      } else {
-        setDayDone(false);
-      }
-    };
 
   loadUser();
   checkMoodForToday();
@@ -114,19 +151,31 @@ useFocusEffect(
       setUsername(username);
     };
 
+    loadUser();
+  }, [])
+);
+
+useFocusEffect(
+  useCallback(() => {
     const checkMoodForToday = async () => {
-      const moodToday = await api.get("/mood/today/" + await AsyncStorage.getItem("userId"));
+      const userId = await AsyncStorage.getItem("userId");
+      const moodToday = await api.get("/mood/today/" + userId);
       if (moodToday.ok && moodToday.data) {
         setDayDone(true);
+        setModalVisible(true);
       } else {
         setDayDone(false);
+        setModalVisible(false);
       }
     };
 
     checkMoodForToday();
-    loadUser();
+    return () => {
+      setModalVisible(false);
+    };
   }, [])
 );
+
   
     if (!isReady) {
       return (
@@ -144,7 +193,7 @@ useFocusEffect(
     enableOnAndroid={true}
     extraScrollHeight={20} >
       <Modal
-        visible={dayDone}
+        visible={modalVisible}
         transparent
         animationType="fade"
       >
@@ -159,7 +208,16 @@ useFocusEffect(
             <TouchableOpacity
               style={styles.button}
               onPress={() => {
-                setDayDone(false);
+                setModalVisible(false);
+              }}
+              >
+              <Text style={styles.buttonText}>Modifier mon humeur du jour</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                setModalVisible(false);
                 router.push("/recap");
               }}
               >

@@ -1,7 +1,7 @@
 import { Link, useRouter} from "expo-router";
 import { useState, useEffect } from "react";
 import { Button, Label } from "@react-navigation/elements";
-import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert, TouchableOpacity} from "react-native";
+import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert, TouchableOpacity, TouchableWithoutFeedback, Keyboard} from "react-native";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from "@expo-google-fonts/inconsolata";
 import { Asset } from "expo-asset";
 import { useAuth } from "@/context/authContext";
@@ -105,6 +105,8 @@ const [isReady, setIsReady] = useState(false);
 
   const router = useRouter();
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    
     <View style={styles.view} className="main-container">
         <Image source={require('../img/deco-top.png')} style={[styles.image, { position: "absolute", top: 0, left: 0, resizeMode: "contain", height: 382, width: 390, }]} />
         <Image source={require('../img/logo-Holo.png')} style={styles.image} />
@@ -128,7 +130,7 @@ const [isReady, setIsReady] = useState(false);
           <TextInput id="confirmPassword" placeholder="Confirmer le mot de passe" style={[styles.input, { borderColor: confirmPasswordBorderColor, boxShadow : "0 0 3px " + confirmPasswordBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={hideConfirmPassword} value={confirmPassword} onChangeText={setConfirmPassword}/>
           <TouchableOpacity style={{ position: "absolute", right: 100, top: 255, paddingVertical: 10 }} onPress={() => {
             setHideConfirmPassword(!hideConfirmPassword);
-            setIconConfirmPassword(iconConfirmPassword);
+            setIconConfirmPassword(iconConfirmPassword === "eye" ? "eye-slash" : "eye");
           }}>
             <FontAwesome5 name={iconConfirmPassword} size={20} color="#001E6A" />
           </TouchableOpacity>
@@ -138,6 +140,7 @@ const [isReady, setIsReady] = useState(false);
         </View>
         <Image source={require('../img/deco-bottom.png')} style={[styles.image, { position: "absolute", bottom: 0, right: 0, resizeMode: "contain", height: 365, width: 390, }]} />
         </View>
+        </TouchableWithoutFeedback>
   );
 }
 

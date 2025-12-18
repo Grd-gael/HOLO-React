@@ -61,4 +61,36 @@ router.get("/today/:id_user", async (req, res) => {
     }
 });
 
+router.put("/update/:id_mood", async (req, res) => {
+    const { id_mood } = req.params;
+    const { humor, comment } = req.body;
+    try {
+        const mood = await MoodObject.findById(id_mood);
+        if (!mood) {
+            return res.status(404).send({
+                ok: false,
+                code: "MOOD_NOT_FOUND",
+                message: "Humeur non trouvée"
+            });
+        }
+
+        if (!humor) {
+            return res.status(400).send({
+                ok: false,
+                code: "REQUIRED_FIELDS_MISSING",
+                message: "L'humeur est requise",
+            });
+        }
+        mood.humor = humor;
+        if (comment !== undefined) mood.comment = comment.trimEnd();
+
+        await mood.save();
+
+        return res.status(200).send({ ok: true, data: mood });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ ok: false, code: "SERVER_ERROR" });
+    }
+});
+
 module.exports = router;
