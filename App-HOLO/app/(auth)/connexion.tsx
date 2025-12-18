@@ -1,11 +1,12 @@
 import { Link, useRouter} from "expo-router";
 import { useState, useEffect } from "react";
 import { Button, Label } from "@react-navigation/elements";
-import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert} from "react-native";
+import { Text, TextInput, View, StyleSheet, Image, ActivityIndicator, Alert, TouchableOpacity} from "react-native";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from "@expo-google-fonts/inconsolata";
 import { Asset } from "expo-asset";
 import api from "@/services/api";
 import { useAuth } from "@/context/authContext";
+import FontAwesome5 from "@expo/vector-icons/build/FontAwesome5";
 
 export default function Connexion() {
 
@@ -19,6 +20,8 @@ export default function Connexion() {
   const [password, setPassword] = useState("");
   const [passwordBorderColor, setPasswordBorderColor] = useState("#001E6A");
   const [usernameBorderColor, setusernameBorderColor] = useState("#001E6A");
+  const [hidePassword, setHidePassword] = useState(true);
+  const [iconPassword, setIconPassword] = useState("eye");
   const { login } = useAuth();
   
 
@@ -53,12 +56,14 @@ export default function Connexion() {
         if (response.code == "INVALID_USER"){
           Alert.alert("Erreur", "Adresse username invalide");
           setusernameBorderColor("red");
+          setPasswordBorderColor("#001E6A");
         } else {
           setusernameBorderColor("#001E6A");
         }
         if (response.code == "PASSWORD_INVALID"){
           Alert.alert("Erreur", "Mot de passe invalide");
           setPasswordBorderColor("red");
+          setusernameBorderColor("#001E6A");
         } else {
           setPasswordBorderColor("#001E6A");
         }
@@ -84,7 +89,13 @@ export default function Connexion() {
         <Label style={styles.label}>Nom d'utilisateur</Label>
         <TextInput inputMode="email" placeholder="Nom d'utilisateur" onChangeText={setusername} style={[styles.input, { borderColor: usernameBorderColor, boxShadow : "0 0 3px " + usernameBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)"/>
         <Label style={styles.label} >Mot de passe</Label>
-        <TextInput placeholder="Mot de passe" style={[styles.input, { borderColor: passwordBorderColor, boxShadow : "0 0 3px " + passwordBorderColor }]} onChangeText={setPassword} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={true} />
+        <TextInput placeholder="Mot de passe" style={[styles.input, { borderColor: passwordBorderColor, boxShadow : "0 0 3px " + passwordBorderColor }]} onChangeText={setPassword} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={hidePassword} />
+        <TouchableOpacity style={{ position: "absolute", right: 100, top: 170, paddingVertical: 10 }} onPress={() => {
+            setHidePassword(!hidePassword);
+            setIconPassword(iconPassword === "eye" ? "eye-slash" : "eye");
+          }}>
+            <FontAwesome5 name={iconPassword} size={20} color="#001E6A" />
+          </TouchableOpacity>
         <Button style={styles.button} color="#ffffff" onPress={handleConnexion}>Valider</Button>
         <Text style={styles.footerText}>Pas de compte ? <Link href="./inscription" style={styles.link}>Inscrivez-vous</Link></Text>
       </View>

@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const passport = require('passport');
 
 
@@ -32,7 +33,7 @@ router.post("/connexion", async (req, res) => {
         message: "Nom d'utilisateur ou mot de passe invalide",
       });
 
-    const match = user.password === password;
+    const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res.status(401).send({
         ok: false,
@@ -56,11 +57,19 @@ router.post("/inscription", async (req, res) => {
   let { username, password } = req.body;
   username = (username || "").trim().toLowerCase();
 
-  if (!username || !password) {
+  if (!username) {
     return res.status(400).send({
       ok: false,
-      code: "username_AND_PASSWORD_REQUIRED",
-      message: "Nom d'utilisateur et mot de passe sont requis",
+      code: "USERNAME_REQUIRED",
+      message: "Nom d'utilisateur est requis",
+    });
+  }
+
+  if (!password) {
+    return res.status(400).send({
+      ok: false,
+      code: "PASSWORD_REQUIRED",
+      message: "Mot de passe est requis",
     });
   }
 
@@ -85,6 +94,8 @@ router.post("/inscription", async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
+  passport.authenticate(["user"]);
+
   const { id } = req.params;
 
   if (id.length < 24) {
@@ -120,11 +131,11 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.put("/:id/avatar", async (req, res) => {
+  passport.authenticate(["user"]);
+
   const { id } = req.params;
   const { avatar } = req.body;
 
-  console.log("ID reçu :", id);
-  console.log("Avatar reçu :", avatar);
 
   if (id.length < 24) {
     return res.status(400).send({
@@ -160,6 +171,8 @@ router.put("/:id/avatar", async (req, res) => {
 })
 
 router.put("/:id/username", async (req, res) => {
+  passport.authenticate(["user"]);
+
   const { id } = req.params;
   const { username } = req.body;
 

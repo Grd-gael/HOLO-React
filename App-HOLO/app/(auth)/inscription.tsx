@@ -7,13 +7,20 @@ import { Asset } from "expo-asset";
 import { useAuth } from "@/context/authContext";
 
 import api from "../../services/api";
+import FontAwesome5 from "@expo/vector-icons/build/FontAwesome5";
   
 export default function Inscription() {
 
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [usernameBorderColor, setUsernameBorderColor] = useState("#001E6A");
+  const [passwordBorderColor, setPasswordBorderColor] = useState("#001E6A");
   const [confirmPasswordBorderColor, setConfirmPasswordBorderColor] = useState("#001E6A");
+  const [hidePassword, setHidePassword] = useState(true);
+  const [hideConfirmPassword, setHideConfirmPassword] = useState(true);
+  const [iconPassword, setIconPassword] = useState("eye");
+  const [iconConfirmPassword, setIconConfirmPassword] = useState("eye");
   const { login } = useAuth();
 
 
@@ -51,6 +58,8 @@ const [isReady, setIsReady] = useState(false);
     if (password !== confirmPassword) {
       Alert.alert("Erreur", "Les mots de passe ne correspondent pas");
       setConfirmPasswordBorderColor("red");
+      setPasswordBorderColor("#001E6A");
+      setUsernameBorderColor("#001E6A");
       return;
     }
     else {
@@ -66,6 +75,27 @@ const [isReady, setIsReady] = useState(false);
         await login(response.data._id, response.data.username, response.data.last_login_at, response.data.createdAt, response.data.avatar);
         router.replace("/(app)/accueil");
       } else {
+        if (response.code === "USERNAME_REQUIRED") {
+          setUsernameBorderColor("red");
+          setPasswordBorderColor("#001E6A");
+          setConfirmPasswordBorderColor("#001E6A");
+        } else {
+          setUsernameBorderColor("#001E6A");
+        }
+        if (response.code === "PASSWORD_REQUIRED") {
+          setPasswordBorderColor("red");
+          setUsernameBorderColor("#001E6A");
+          setConfirmPasswordBorderColor("#001E6A");
+        } else {
+          setPasswordBorderColor("#001E6A");
+        }
+        if (response.code === "USER_ALREADY_EXISTS") {
+          setUsernameBorderColor("red");
+          setConfirmPasswordBorderColor("#001E6A");
+          setPasswordBorderColor("#001E6A");
+        } else {
+          setUsernameBorderColor("#001E6A");
+        }
         Alert.alert("Erreur", response.message || "Problème lors de l'inscription");
       }
     } catch (error) {
@@ -83,14 +113,25 @@ const [isReady, setIsReady] = useState(false);
           <Text style={styles.title}>Inscription</Text>
 
           <Label style={styles.label}>Nom d'utilisateur</Label>
-          <TextInput inputMode="email"placeholder="Nom d'utilisateur" style={styles.input} placeholderTextColor= "rgba(0, 30, 106, 0.5)" value={username} onChangeText={setusername} />
+          <TextInput inputMode="email"placeholder="Nom d'utilisateur" style={[styles.input, { borderColor: usernameBorderColor, boxShadow : "0 0 3px " + usernameBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)" value={username} onChangeText={setusername} />
 
           <Label style={styles.label} >Mot de passe</Label>
-          <TextInput placeholder="Mot de passe" style={styles.input} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={true} value={password} onChangeText={setPassword} />
+          <TextInput placeholder="Mot de passe" style={[styles.input, { borderColor: passwordBorderColor, boxShadow : "0 0 3px " + passwordBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={hidePassword} value={password} onChangeText={setPassword} />
+          <TouchableOpacity style={{ position: "absolute", right: 100, top: 170, paddingVertical: 10 }} onPress={() => {
+            setHidePassword(!hidePassword);
+            setIconPassword(iconPassword === "eye" ? "eye-slash" : "eye");
+          }}>
+            <FontAwesome5 name={iconPassword} size={20} color="#001E6A" />
+          </TouchableOpacity>
 
           <Label style={styles.label} >Confirmer le Mot de passe</Label>
-          <TextInput id="confirmPassword" placeholder="Confirmer le mot de passe" style={[styles.input, { borderColor: confirmPasswordBorderColor, boxShadow : "0 0 3px " + confirmPasswordBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={true} value={confirmPassword} onChangeText={setConfirmPassword}/>
-
+          <TextInput id="confirmPassword" placeholder="Confirmer le mot de passe" style={[styles.input, { borderColor: confirmPasswordBorderColor, boxShadow : "0 0 3px " + confirmPasswordBorderColor }]} placeholderTextColor= "rgba(0, 30, 106, 0.5)" secureTextEntry={hideConfirmPassword} value={confirmPassword} onChangeText={setConfirmPassword}/>
+          <TouchableOpacity style={{ position: "absolute", right: 100, top: 255, paddingVertical: 10 }} onPress={() => {
+            setHideConfirmPassword(!hideConfirmPassword);
+            setIconConfirmPassword(iconConfirmPassword);
+          }}>
+            <FontAwesome5 name={iconConfirmPassword} size={20} color="#001E6A" />
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.button]} onPress={handleRegister}><Text style={{fontFamily: "Inconsolata_400Regular", color: "#ffffff"}}>Valider</Text></TouchableOpacity>
           <Text style={styles.footerText}>Déjà un compte ? <Link href="./connexion" style={styles.link}>Connectez-vous</Link></Text>
 

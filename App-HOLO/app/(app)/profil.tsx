@@ -1,7 +1,7 @@
 import { Text, View, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Pressable, Modal, TextInput, Alert } from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useFonts, Inconsolata_400Regular, Inconsolata_700Bold } from '@expo-google-fonts/inconsolata';
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from "@/context/authContext";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -15,8 +15,19 @@ export default function Profil() {
         Inconsolata_400Regular,
         Inconsolata_700Bold,
     });
+    interface Mood {
+      _id?: string;
+      id_user?: string;
+      date: string;
+      humor: string;
+      comment?: string;
+    }
+    
+    
+      
 
     const [username, setusername] = useState<string | null>("");
+    const [moods, setMoods] = useState<Mood[]>([]);
     const [newUsername, setNewUsername] = useState<string>("");
     const [usernameModalVisible, setUsernameModalVisible] = useState(false);
     const [lastLogin, setLastLogin] = useState<Date | null>(null);
@@ -103,6 +114,16 @@ export default function Profil() {
         }
     }
 
+    const loadMoods = async () => {
+        const userID = await AsyncStorage.getItem("userId");
+        const response = await api.get(`/mood/list/${userID}`);
+        if (response.ok) {
+          setMoods(response.data);
+        } else {
+          Alert.alert("Erreur", "Problème lors du chargement des humeurs");
+        }
+      };
+
 
 
      useEffect(() => {
@@ -132,10 +153,17 @@ export default function Profil() {
         setIsReady(true);
       }
     
-      loadUser();
+    loadMoods();
+    loadUser();
     loadAssets();
 
     }, []);
+
+    useFocusEffect(
+            useCallback(() => {
+                loadMoods();
+            }, [])
+        );
     
   
     if (!isReady) {
@@ -145,6 +173,12 @@ export default function Profil() {
         </View>
       );
     }
+
+
+    const moodCounts = moods.reduce<Record<string, number>>((acc, mood) => {
+        acc[mood.humor] = (acc[mood.humor] || 0) + 1;
+        return acc;
+        }, {});
 
 
   
@@ -278,8 +312,19 @@ export default function Profil() {
                     <FontAwesome5 name="pen" size={18} color="#001E6A" style={{ marginLeft: 10 }}/>
                 </TouchableOpacity>
             </Text>
-            <Text style={[styles.paragraphe, { color: "#001E6A" }]}>Membre depuis le {createdAt ? createdAt.toLocaleDateString("fr-FR") : "N/A"}</Text>
-            <TouchableOpacity style={styles.logoutButton} onPress = {handleLogout}>
+            <Text style={[styles.paragraphe, { color: "#001E6A", marginBottom: -30 }]}>Membre depuis le {createdAt ? createdAt.toLocaleDateString("fr-FR") : "N/A"}</Text>
+
+                <Text style={styles.information}>
+                Nombre d'humeurs enregistrées: {moods.length}
+                </Text>
+
+                <View style={{ marginTop: 10, alignSelf: "flex-start", marginLeft: 20 }}>
+                <Text style={[styles.paragraphe, {lineHeight: 20}]}><FontAwesome5 name="grin-beam" size={14} color="#001E6A" /> Heureux : {moodCounts.happy || 0} jour{moodCounts.happy > 1 ? "s" : ""}</Text>
+                <Text style={[styles.paragraphe, {lineHeight: 20}]}><FontAwesome5 name="frown" size={14} color="#001E6A" /> Triste : {moodCounts.sad || 0} jour{moodCounts.sad > 1 ? "s" : ""}</Text>
+                <Text style={[styles.paragraphe, {lineHeight: 20}]}><FontAwesome5 name="grimace" size={14} color="#001E6A" /> Anxieux : {moodCounts.anxious || 0} jour{moodCounts.anxious > 1 ? "s" : ""}</Text>
+                <Text style={[styles.paragraphe, {lineHeight: 20}]}><FontAwesome5 name="angry" size={14} color="#001E6A" /> En colère : {moodCounts.angry || 0} jour{moodCounts.angry > 1 ? "s" : ""}</Text>
+                </View>            
+                <TouchableOpacity style={styles.logoutButton} onPress = {handleLogout}>
                 <FontAwesome name="sign-out" size={20} color="#ee0000" />
                 <Text style={{ color: "#ee0000" }}>Se déconnecter</Text>
             </TouchableOpacity>
@@ -330,6 +375,15 @@ const styles = StyleSheet.create({
     height: 50,
     fontFamily: "Inconsolata_400Regular",
   },
+    information: {
+        fontSize: 14,
+        fontFamily: "Inconsolata_400Regular",
+        backgroundColor: "#001E6A",
+        color: "#FFFFFF",
+        paddingVertical: 10,
+        paddingHorizontal: 30,
+        borderRadius: 10,
+    },
 
     logoutButton: { 
         borderColor: "#ee0000",
