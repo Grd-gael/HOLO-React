@@ -93,8 +93,8 @@ router.post("/inscription", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
-  passport.authenticate(["user"]);
+router.delete("/:id", passport.authenticate(["user"]), async (req, res) => {
+
 
   const { id } = req.params;
 
@@ -130,8 +130,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id/avatar", async (req, res) => {
-  passport.authenticate(["user"]);
+router.put("/:id/avatar", passport.authenticate(["user"]), async (req, res) => {
+
 
   const { id } = req.params;
   const { avatar } = req.body;
@@ -170,8 +170,8 @@ router.put("/:id/avatar", async (req, res) => {
   }
 })
 
-router.put("/:id/username", async (req, res) => {
-  passport.authenticate(["user"]);
+router.put("/:id/username", passport.authenticate(["user"]), async (req, res) => {
+  ;
 
   const { id } = req.params;
   const { username } = req.body;
